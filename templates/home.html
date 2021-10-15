@@ -2,16 +2,23 @@
 {% block title %}{{ super() }}Home{% endblock %}
 {% block content %}
     <div class="{{ name }}-container">
-        <p>Welcome home! kevyn!</p>
+        <p>IoT device track</p>
     </div>
-  <table border = 1>
-    {% for key, value in data.items() %}
+    <table border = 1>
+        <tr> test <th> test </th> <td> test </td> </tr>
+      {% for key, value in data.items() %}
 
-    <tr>
-       <th> {{ key }} </th>
-       <td> {{ value }} </td>
-    </tr>
+      <tr>
+         <th> {{ key }} </th>
+         <td> {{ value }} </td>
+      </tr>
 
-    {% endfor %}
- </table>
+      {% endfor %}
+    </table>
+    <h3>Warehouse</h3>
+    <p>devices: {{ devices['warehouse'] }}</p>
+    <h3>Truck</h3>
+    <p>devices: {{ devices['truck'] }}</p>
+    <h3>Site</h3>
+    <p>devices: {{ devices['site'] }}</p>
 {% endblock %}
