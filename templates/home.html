@@ -4,8 +4,17 @@
     <div class="{{ name }}-container">
         <p>IoT device track</p>
     </div>
+    <h3>Warehouse</h3>
+    <p>devices: {{ devices['warehouse'] }}</p>
+    <h3>Truck</h3>
+    <p>devices: {{ devices['truck'] }}</p>
+    <h3>Site</h3>
+    <p>devices: {{ devices['site'] }}</p>
+    <br>
+    <br>
+    <h3>Warehouse beacons</h3>
     <table border = 1>
-      {% for key, value in beacons.items() %}
+      {% for key, value in warehouse_beacons.items() %}
 
       <tr>
          <th> {{ key }} </th>
@@ -14,10 +23,26 @@
 
       {% endfor %}
     </table>
-    <h3>Warehouse</h3>
-    <p>devices: {{ devices['warehouse'] }}</p>
-    <h3>Truck</h3>
-    <p>devices: {{ devices['truck'] }}</p>
-    <h3>Site</h3>
-    <p>devices: {{ devices['site'] }}</p>
+    <h3>Truck beacons</h3>
+    <table border = 1>
+      {% for key, value in truck_beacons.items() %}
+
+      <tr>
+         <th> {{ key }} </th>
+         <td> {{ value }} </td>
+      </tr>
+
+      {% endfor %}
+    </table>
+    <h3>Site beacons</h3>
+    <table border = 1>
+      {% for key, value in warehouse_beacons.items() %}
+
+      <tr>
+         <th> {{ key }} </th>
+         <td> {{ value }} </td>
+      </tr>
+
+      {% endfor %}
+    </table>
 {% endblock %}

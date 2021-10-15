@@ -56,7 +56,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def validate_data(data):
-    if 'DeviceMAC' not in data.keys() or 'DeviceName' not in data.keys():
+    if 'DeviceMAC' not in data.keys():
         return False
 
     if 'DeviceRSSI' not in data.keys():
@@ -66,6 +66,26 @@ def validate_data(data):
         return False
 
     return True
+
+
+def update_devices():
+    devices['warehouse'] = 0
+    devices['truck'] = 0
+    devices['site'] = 0
+
+    for mac in mac_addresses:
+        warehouse_signal = warehouse_beacons[mac]
+        truck_signal = truck_beacons[mac]
+        site_signal = site_beacons[mac]
+        if warehouse_signal == min(warehouse_signal, truck_signal, site_signal):
+            devices['warehouse'] += 1
+            continue
+        if truck_signal == min(warehouse_signal, truck_signal, site_signal):
+            devices['truck'] += 1
+            continue
+        if site_signal == min(warehouse_signal, truck_signal, site_signal):
+            devices['site'] += 1
+            continue
 
 
 def on_message(client, userdata, msg):
@@ -84,6 +104,8 @@ def on_topic_msg(topic, beacons, client, userdata, msg):
         int(data['DeviceRSSI']))
     client.publish(debug_topic, f'{topic} updated')
 
+    update_devices()
+
 
 def on_warehouse_msg(client, userdata, msg):
     on_topic_msg('Warehouse', warehouse_beacons, client, userdata, msg)
@@ -99,7 +121,10 @@ def on_site_msg(client, userdata, msg):
 
 @app.route("/")
 def home():
-    return render_template("home.html", name="home", devices=devices, beacons=warehouse_beacons)
+    return render_template("home.html", name="home", devices=devices,
+                           warehouse_beacons=warehouse_beacons,
+                           truck_beacons=truck_beacons,
+                           site_beacons=site_beacons)
 
 
 client = mqtt.Client()
