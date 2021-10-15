@@ -62,7 +62,7 @@ def validate_data(data):
     if 'DeviceRSSI' not in data.keys():
         return False
 
-    if data['DeviceMAC'] not in warehouse_beacons.keys():
+    if data['DeviceMAC'].lower() not in warehouse_beacons.keys():
         return False
 
     return True
@@ -77,15 +77,16 @@ def on_message(client, userdata, msg):
         return
 
     if data['DeviceName'].lower() == 'warehouse':
-        warehouse_beacons[data['DeviceMAC']] = abs(int(data['DeviceRSSI']))
+        warehouse_beacons[data['DeviceMAC'].lower()] = abs(
+            int(data['DeviceRSSI']))
         client.publish(debug_topic, 'warehouse updated')
 
     if data['DeviceName'].lower() == 'truck':
-        truck_beacons[data['DeviceMAC']] = abs(int(data['DeviceRSSI']))
+        truck_beacons[data['DeviceMAC'].lower()] = abs(int(data['DeviceRSSI']))
         client.publish(debug_topic, 'truck updated')
 
     if data['DeviceName'].lower() == 'site':
-        site_beacons[data['DeviceMAC']] = abs(int(data['DeviceRSSI']))
+        site_beacons[data['DeviceMAC'].lower()] = abs(int(data['DeviceRSSI']))
         client.publish(debug_topic, 'site updated')
 
 
