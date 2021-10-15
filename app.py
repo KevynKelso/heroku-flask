@@ -32,7 +32,7 @@ def on_message(client, userdata, msg):
 
 @app.route("/")
 def home():
-    return render_template("home.html", name="home" data=data, devices=devices)
+    return render_template("home.html", name="home", data=data, devices=devices)
 
 client = mqtt.Client()
 client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
