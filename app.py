@@ -17,8 +17,8 @@ PORT = 8883
 topics = 'Warehouse Truck Site'.split()
 debug_topic = 'debug'
 
-serial_numbers = '104608418437344 10643107158240 110032962132192 126796219488480 146084900837600 156135141087456 16321053923552 163612645595360 205673293879520 216187357042912 220254691072224 251869962115296 252239312525536 257779820337376 259283058890976 260099102677216 268160756291808 270394139285728 277077125175520 279203100432608 29811562977504 33664115087584 40819547379936 41291993782496 43280563640544 44388681980128 50556238239968 50813936277728 53064499140832 6000247511264 60043804219616 63106132678880 70523557976288 97324137126112'.split()
-mac_addresses = ['e0:18:9f:09:7d:36']
+serial_numbers = '255043926169824 59910660233440 104608418437344 10643107158240 110032962132192 126796219488480 146084900837600 156135141087456 16321053923552 163612645595360 205673293879520 216187357042912 220254691072224 251869962115296 252239312525536 257779820337376 259283058890976 260099102677216 268160756291808 270394139285728 277077125175520 279203100432608 29811562977504 33664115087584 40819547379936 41291993782496 43280563640544 44388681980128 50556238239968 50813936277728 53064499140832 6000247511264 60043804219616 63106132678880 70523557976288 97324137126112'.split()
+mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
 devices = {'warehouse': 0, 'truck': 0, 'site': 0}
 warehouse_beacons = {}
@@ -42,9 +42,9 @@ def init_beacons():
             mac_addresses.append(mac)
 
     for mac in mac_addresses:
-        warehouse_beacons[mac] = 999
-        truck_beacons[mac] = 999
-        site_beacons[mac] = 999
+        warehouse_beacons[mac] = -999
+        truck_beacons[mac] = -999
+        site_beacons[mac] = -999
 
 
 def on_connect(client, userdata, flags, rc):
@@ -79,13 +79,16 @@ def update_devices():
         warehouse_signal = warehouse_beacons[mac]
         truck_signal = truck_beacons[mac]
         site_signal = site_beacons[mac]
-        if warehouse_signal == min(warehouse_signal, truck_signal, site_signal):
+        if warehouse_signal == -999 and truck_signal == -999 and site_signal == -999:
+            continue
+
+        if warehouse_signal == max(warehouse_signal, truck_signal, site_signal):
             devices['warehouse'] += 1
             continue
-        if truck_signal == min(warehouse_signal, truck_signal, site_signal):
+        if truck_signal == max(warehouse_signal, truck_signal, site_signal):
             devices['truck'] += 1
             continue
-        if site_signal == min(warehouse_signal, truck_signal, site_signal):
+        if site_signal == max(warehouse_signal, truck_signal, site_signal):
             devices['site'] += 1
             continue
 
@@ -102,8 +105,7 @@ def on_topic_msg(topic, beacons, client, userdata, msg):
         client.publish(debug_topic, 'invalid data')
         return
 
-    beacons[data['DeviceMAC'].lower()] = abs(
-        int(data['DeviceRSSI']))
+    beacons[data['DeviceMAC'].lower()] = int(data['DeviceRSSI'])
     client.publish(debug_topic, f'{topic} updated')
 
     update_devices()
