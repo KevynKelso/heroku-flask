@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+import json
 
 from flask import Flask
 from flask import render_template
@@ -7,7 +8,8 @@ app = Flask(__name__)
 
 USERNAME = "kkelso"
 PASSWORD = "hiveMQ!23"
-HOST = "74a454df0d3ed456fbfb6a3d1ed57b14f.s1.eu.hivemq.cloud"
+# HOST = "74a454df0d3ed456fbfb6a3d1ed57b14f.s1.eu.hivemq.cloud"
+HOST = "f3edf0f5f7094a11a477cfb3f6519446.s1.eu.hivemq.cloud"
 PORT = 8883
 
 topics = 'Warehouse Truck Site'.split()
@@ -28,7 +30,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     data = json.loads(msg.payload.decode())
-    client.publish('debug', "RECIEVED")
+    client.publish('debug', data)
 
 
 @app.route("/")
