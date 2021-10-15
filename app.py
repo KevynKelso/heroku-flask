@@ -18,11 +18,11 @@ debug_topic = 'debug'
 serial_numbers = '104608418437344 10643107158240 110032962132192 126796219488480 146084900837600 156135141087456 16321053923552 163612645595360 205673293879520 216187357042912 220254691072224 251869962115296 252239312525536 257779820337376 259283058890976 260099102677216 268160756291808 270394139285728 277077125175520 279203100432608 29811562977504 33664115087584 40819547379936 41291993782496 43280563640544 44388681980128 50556238239968 50813936277728 53064499140832 6000247511264 60043804219616 63106132678880 70523557976288 97324137126112'.split()
 mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
-# is DeviceName = Warehouse | truck | site ?
 devices = {'warehouse': 0, 'truck': 0, 'site': 0}
 warehouse_beacons = {}
 truck_beacons = {}
 site_beacons = {}
+msg_count = 0
 
 
 def sn_to_bytes(sn: int) -> str:
@@ -69,25 +69,32 @@ def validate_data(data):
 
 
 def on_message(client, userdata, msg):
-    client.publish(debug_topic, msg.payload.decode())
+    client.publish(debug_topic, 'Unknown topic')
+
+
+def on_topic_msg(topic, beacons, client, userdata, msg):
+    client.publish(debug_topic, f'{topic}: msg: {msg.payload.decode()}')
     data = json.loads(msg.payload.decode())
 
     if not validate_data(data):
         client.publish(debug_topic, 'invalid data')
         return
 
-    if data['DeviceName'].lower() == 'warehouse':
-        warehouse_beacons[data['DeviceMAC'].lower()] = abs(
-            int(data['DeviceRSSI']))
-        client.publish(debug_topic, 'warehouse updated')
+    beacons[data['DeviceMAC'].lower()] = abs(
+        int(data['DeviceRSSI']))
+    client.publish(debug_topic, f'{topic} updated')
 
-    if data['DeviceName'].lower() == 'truck':
-        truck_beacons[data['DeviceMAC'].lower()] = abs(int(data['DeviceRSSI']))
-        client.publish(debug_topic, 'truck updated')
 
-    if data['DeviceName'].lower() == 'site':
-        site_beacons[data['DeviceMAC'].lower()] = abs(int(data['DeviceRSSI']))
-        client.publish(debug_topic, 'site updated')
+def on_warehouse_msg(client, userdata, msg):
+    on_topic_msg('Warehouse', warehouse_beacons, client, userdata, msg)
+
+
+def on_truck_msg(client, userdata, msg):
+    on_topic_msg('Truck', truck_beacons, client, userdata, msg)
+
+
+def on_site_msg(client, userdata, msg):
+    on_topic_msg('Site', site_beacons, client, userdata, msg)
 
 
 @app.route("/")
@@ -100,6 +107,9 @@ client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
 client.username_pw_set(USERNAME, PASSWORD)
 client.on_connect = on_connect
 client.on_message = on_message
+client.message_callback_add('Warehouse', on_warehouse_msg)
+client.message_callback_add('Truck', on_truck_msg)
+client.message_callback_add('Site', on_site_msg)
 client.connect(HOST, PORT)
 client.loop_start()
 
