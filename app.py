@@ -36,7 +36,7 @@ def sn_to_bytes(sn: int) -> str:
 
 def init_beacons():
     for sn in serial_numbers:
-        mac = sn_to_bytes(sn)
+        mac = sn_to_bytes(int(sn))
         if mac not in mac_addresses:
             mac_addresses.append(mac)
 
