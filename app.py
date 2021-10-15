@@ -30,6 +30,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def on_message(client, userdata, msg):
+    client.publish('debug', msg.payload.decode())
     data = json.loads(msg.payload.decode())
     client.publish('debug', data)
 
