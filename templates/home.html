@@ -4,4 +4,14 @@
     <div class="{{ name }}-container">
         <p>Welcome home! kevyn!</p>
     </div>
+  <table border = 1>
+    {% for key, value in data.items() %}
+
+    <tr>
+       <th> {{ key }} </th>
+       <td> {{ value }} </td>
+    </tr>
+
+    {% endfor %}
+ </table>
 {% endblock %}

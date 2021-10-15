@@ -14,6 +14,8 @@ topics = 'Warehouse Truck Site'.split()
 debug_topic = 'debug'
 
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
+data = {}
+devices = {'warehouse': 0, 'truck': 0, 'site': 0}
 
 def on_connect(client, userdata, flags, rc):
     for topic in topics:
@@ -24,13 +26,13 @@ def on_connect(client, userdata, flags, rc):
 
 
 def on_message(client, userdata, msg):
-    data['title'] = msg.payload.decode()
+    data = json.loads(msg.payload.decode())
     client.publish('debug', "RECIEVED")
 
 
 @app.route("/")
 def home():
-    return render_template("home.html", name="home")
+    return render_template("home.html", name="home" data=data, devices=devices)
 
 client = mqtt.Client()
 client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
