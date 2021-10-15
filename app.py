@@ -23,9 +23,10 @@ devices = {'warehouse': 0, 'truck': 0, 'site': 0}
 def on_connect(client, userdata, flags, rc):
     for topic in topics:
         client.subscribe(topic)
+        client.publish(debug_topic, f'Subscribed to {topic}')
 
-    client.publish('debug', "STARTING SERVER")
-    client.publish('debug', "CONNECTED")
+    client.publish(debug_topic, "STARTING SERVER")
+    client.publish(debug_topic, "CONNECTED")
 
 
 def on_message(client, userdata, msg):
