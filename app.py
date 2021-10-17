@@ -21,7 +21,7 @@ mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
 locations = {'warehouse': 0, 'truck': 0, 'site': 0}
 beacons = {}
-MAX_TTL = 5
+MAX_TTL = 10
 # beacons -> {"<some mac address>": [<RSSI>, <location>, <ttl>]}
 
 
