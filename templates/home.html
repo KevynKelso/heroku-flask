@@ -1,46 +1,27 @@
 {% extends "base.html" %}
 {% block title %}{{ super() }}Home{% endblock %}
 {% block content %}
+    <img src="{{url_for('static', filename='banner.png')}}" class="banner" align="middle"/>
     <div class="{{ name }}-container">
         <p>IoT device track</p>
     </div>
     <h3>Warehouse</h3>
-    <p>devices: {{ devices['warehouse'] }}</p>
+    <p>devices: {{ locations['warehouse'] }}</p>
     <h3>Truck</h3>
-    <p>devices: {{ devices['truck'] }}</p>
+    <p>devices: {{ locations['truck'] }}</p>
     <h3>Site</h3>
-    <p>devices: {{ devices['site'] }}</p>
+    <p>devices: {{ locations['site'] }}</p>
     <br>
     <br>
     <h3>Warehouse beacons</h3>
     <table border = 1>
-      {% for key, value in warehouse_beacons.items() %}
+      {% for key, value in beacons.items() %}
 
       <tr>
          <th> {{ key }} </th>
-         <td> -{{ value }} dB</td>
-      </tr>
-
-      {% endfor %}
-    </table>
-    <h3>Truck beacons</h3>
-    <table border = 1>
-      {% for key, value in truck_beacons.items() %}
-
-      <tr>
-         <th> {{ key }} </th>
-         <td> -{{ value }} dB</td>
-      </tr>
-
-      {% endfor %}
-    </table>
-    <h3>Site beacons</h3>
-    <table border = 1>
-      {% for key, value in warehouse_beacons.items() %}
-
-      <tr>
-         <th> {{ key }} </th>
-         <td> -{{ value }} dB</td>
+         <td> RSSI: {{ value[0] }} dB</td>
+         <td> location: {{ value[1] }} </td>
+         <td> TTL: {{ value[2] }} </td>
       </tr>
 
       {% endfor %}

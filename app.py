@@ -7,10 +7,9 @@ from flask import render_template
 
 app = Flask(__name__)
 
-DELAY = 1  # longer delays may improve performance and use less data
+DELAY = 2  # longer delays may improve performance and use less data
 USERNAME = "kkelso"
 PASSWORD = "hiveMQ!23"
-# HOST = "74a454df0d3ed456fbfb6a3d1ed57b14f.s1.eu.hivemq.cloud"
 HOST = "f3edf0f5f7094a11a477cfb3f6519446.s1.eu.hivemq.cloud"
 PORT = 8883
 
@@ -20,10 +19,10 @@ debug_topic = 'debug'
 serial_numbers = '255043926169824 59910660233440 104608418437344 10643107158240 110032962132192 126796219488480 146084900837600 156135141087456 16321053923552 163612645595360 205673293879520 216187357042912 220254691072224 251869962115296 252239312525536 257779820337376 259283058890976 260099102677216 268160756291808 270394139285728 277077125175520 279203100432608 29811562977504 33664115087584 40819547379936 41291993782496 43280563640544 44388681980128 50556238239968 50813936277728 53064499140832 6000247511264 60043804219616 63106132678880 70523557976288 97324137126112'.split()
 mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
-devices = {'warehouse': 0, 'truck': 0, 'site': 0}
-warehouse_beacons = {}
-truck_beacons = {}
-site_beacons = {}
+locations = {'warehouse': 0, 'truck': 0, 'site': 0}
+beacons = {}
+MAX_TTL = 5
+# beacons -> {"<some mac address>": [<RSSI>, <location>, <ttl>]}
 
 
 def sn_to_bytes(sn: int) -> str:
@@ -42,9 +41,7 @@ def init_beacons():
             mac_addresses.append(mac)
 
     for mac in mac_addresses:
-        warehouse_beacons[mac] = -999
-        truck_beacons[mac] = -999
-        site_beacons[mac] = -999
+        beacons[mac] = [-999, "unknown", 0]
 
 
 def on_connect(client, userdata, flags, rc):
@@ -54,82 +51,92 @@ def on_connect(client, userdata, flags, rc):
         client.publish(debug_topic, f'Subscribed to {topic}')
 
     client.publish(debug_topic, "STARTING SERVER")
-    client.publish(debug_topic, "CONNECTED")
 
 
 def validate_data(data):
     if 'DeviceMAC' not in data.keys():
-        return False
+        return 'missing mac address'
 
     if 'DeviceRSSI' not in data.keys():
-        return False
+        return 'missing rssi'
 
-    if data['DeviceMAC'].lower() not in warehouse_beacons.keys():
-        return False
+    if data['DeviceMAC'].lower() not in beacons.keys():
+        return 'unrecognized mac'
 
-    return True
+    try:
+        int(data['DeviceRSSI'])
+    except:
+        return 'invalid rssi'
+
+    return None
 
 
 def update_devices():
-    devices['warehouse'] = 0
-    devices['truck'] = 0
-    devices['site'] = 0
+    locations['warehouse'] = 0
+    locations['truck'] = 0
+    locations['site'] = 0
 
     for mac in mac_addresses:
-        warehouse_signal = warehouse_beacons[mac]
-        truck_signal = truck_beacons[mac]
-        site_signal = site_beacons[mac]
-        if warehouse_signal == -999 and truck_signal == -999 and site_signal == -999:
+        rssi = beacons[mac][0]
+        location = beacons[mac][1]
+        ttl = beacons[mac][2]
+        # decrement ttl
+        beacons[mac][2] -= 1
+
+        if ttl <= 0:
+            beacons[mac][0] = -999
+            beacons[mac][1] = 'unknown'
+            beacons[mac][2] = 0
             continue
 
-        if warehouse_signal == max(warehouse_signal, truck_signal, site_signal):
-            devices['warehouse'] += 1
+        if rssi == -999 or location == 'unknown':
             continue
-        if truck_signal == max(warehouse_signal, truck_signal, site_signal):
-            devices['truck'] += 1
-            continue
-        if site_signal == max(warehouse_signal, truck_signal, site_signal):
-            devices['site'] += 1
-            continue
+
+        locations[location] += 1
 
 
 def on_message(client, userdata, msg):
     client.publish(debug_topic, 'Unknown topic')
 
 
-def on_topic_msg(topic, beacons, client, userdata, msg):
-    client.publish(debug_topic, f'{topic}: msg: {msg.payload.decode()}')
+def on_topic_msg(topic, client, userdata, msg):
     data = json.loads(msg.payload.decode())
 
-    if not validate_data(data):
-        client.publish(debug_topic, 'invalid data')
+    if validate_data(data):
+        client.publish(debug_topic, f'{topic}: invalid data, {validate_data(data)}')
         return
 
-    beacons[data['DeviceMAC'].lower()] = int(data['DeviceRSSI'])
-    client.publish(debug_topic, f'{topic} updated')
+    mac = data['DeviceMAC'].lower()
+    rssi = int(data['DeviceRSSI'])
+    last_rssi = beacons[mac][0]
+
+    if last_rssi > rssi:
+        client.publish(debug_topic, f'remain at {beacons[mac][1]}')
+        return
+
+    beacons[mac] = [rssi, topic.lower(), MAX_TTL]
+    client.publish(debug_topic, f'device moved to {topic.lower()}')
 
     update_devices()
     time.sleep(DELAY)
 
 
 def on_warehouse_msg(client, userdata, msg):
-    on_topic_msg('Warehouse', warehouse_beacons, client, userdata, msg)
+    on_topic_msg('Warehouse', client, userdata, msg)
 
 
 def on_truck_msg(client, userdata, msg):
-    on_topic_msg('Truck', truck_beacons, client, userdata, msg)
+    on_topic_msg('Truck', client, userdata, msg)
 
 
 def on_site_msg(client, userdata, msg):
-    on_topic_msg('Site', site_beacons, client, userdata, msg)
+    on_topic_msg('Site', client, userdata, msg)
 
 
 @app.route("/")
 def home():
-    return render_template("home.html", name="home", devices=devices,
-                           warehouse_beacons=warehouse_beacons,
-                           truck_beacons=truck_beacons,
-                           site_beacons=site_beacons)
+    return render_template("home.html", name="home", locations=locations,
+                           beacons=beacons)
 
 
 client = mqtt.Client()
@@ -144,4 +151,5 @@ client.connect(HOST, PORT)
 client.loop_start()
 
 if __name__ == "__main__":
+    debug_topic = "local_debug"
     app.run(debug=True)
