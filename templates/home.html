@@ -12,15 +12,19 @@
         $.getJSON($SCRIPT_ROOT + '/_stuff',
 
           function(data) {
-            for (var i = 0; i < data.length; i++) {
-                var beacon = data[i];
+            for (var mac in data) {
+                var rssi = data[mac][0];
+                var loc = data[mac][1];
+                var ttl = data[mac][2];
+                $(`#${mac}rssi`).text(rssi);
+                $(`#${mac}location`).text(loc);
+                $(`#${mac}ttl`).text(ttl);
             }
 
             $('#result').text(data);
             console.log(data);
           });
           
-    };
     </script>
     <span id="result">?</span>
     <script>
