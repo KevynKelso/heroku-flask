@@ -102,24 +102,37 @@ def on_message(client, userdata, msg):
 def on_topic_msg(topic, client, userdata, msg):
     data = json.loads(msg.payload.decode())
 
-    if validate_data(data):
-        client.publish(debug_topic, f'{topic}: invalid data, {validate_data(data)}')
+    valid_msg = validate_data(data)
+    if valid_msg:
+        if 'unrecognized' in valid_msg:
+            return
+        client.publish(debug_topic, f'{topic}: invalid data, {valid_msg}')
         return
 
     mac = data['DeviceMAC'].lower()
     rssi = int(data['DeviceRSSI'])
     location = topic.lower()
+
     last_rssi = beacons[mac][0]
     last_location = beacons[mac][1]
+    ttl = beacons[mac][2]
 
-    if last_rssi > rssi and last_location == location:
-        beacons[mac] = [rssi, last_location, MAX_TTL]
-        client.publish(debug_topic, f'remain at {beacons[mac][1]}')
+    if rssi > last_rssi:
+        ttl = MAX_TTL
+
+    if rssi > last_rssi and last_location != location:
+        beacons[mac] = [rssi, location, ttl]
+        client.publish(debug_topic, f'moved to {location}')
         update_devices()
+        time.sleep(DELAY)
         return
 
-    beacons[mac] = [rssi, topic.lower(), MAX_TTL]
-    client.publish(debug_topic, f'device moved to {topic.lower()}')
+    if last_location == location:
+        beacons[mac] = [rssi, last_location, ttl]
+        client.publish(debug_topic, f'{last_location}, {last_rssi} -> {rssi}')
+        update_devices()
+        time.sleep(DELAY)
+        return
 
     update_devices()
     time.sleep(DELAY)
@@ -137,9 +150,10 @@ def on_site_msg(client, userdata, msg):
     on_topic_msg('Site', client, userdata, msg)
 
 
-@app.route('/_stuff', methods = ['GET'])
+@app.route('/_stuff', methods=['GET'])
 def stuff():
     return jsonify(beacons)
+
 
 @app.route("/")
 def home():
