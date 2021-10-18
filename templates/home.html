@@ -14,8 +14,11 @@
           function(data) {
             for (var mac in data) {
                 for (var loc in data[mac]) {
-                    console.log(loc);
+                    var ttl = data[mac][loc][1]
+                    var rssi = data[mac][loc][0]
+                    console.log(ttl, rssi);
                 }
+                break;
             }
 
             $('#result').text(data);
