@@ -108,11 +108,14 @@ def on_topic_msg(topic, client, userdata, msg):
 
     mac = data['DeviceMAC'].lower()
     rssi = int(data['DeviceRSSI'])
+    location = topic.lower()
     last_rssi = beacons[mac][0]
+    last_location = beacons[mac][1]
 
-    if last_rssi > rssi:
-        beacons[mac] = [rssi, topic.lower(), MAX_TTL] # not sure if need
+    if last_rssi > rssi and last_location == location:
+        beacons[mac] = [rssi, last_location, MAX_TTL]
         client.publish(debug_topic, f'remain at {beacons[mac][1]}')
+        update_devices()
         return
 
     beacons[mac] = [rssi, topic.lower(), MAX_TTL]
