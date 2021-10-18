@@ -53,15 +53,15 @@
          {% for loc, rssi_ttl in beacon_info.items() %}
              <td id="{{ mac }}{{ loc }}location"></td>
              <script>
-                 document.getElementById("#{{mac}}{{loc}}location").innerHTML;
+                 document.getElementById("{{mac}}{{loc}}location").innerHTML;
              </script>
              <td id="{{ mac }}{{ loc }}rssi"></td>
              <script>
-                 document.getElementById("#{{mac}}{{loc}}rssi").innerHTML;
+                 document.getElementById("{{mac}}{{loc}}rssi").innerHTML;
              </script>
              <td id="{{ mac }}{{ loc }}ttl"></td>
              <script>
-                 document.getElementById("#{{mac}}{{loc}}ttl").innerHTML;
+                 document.getElementById("{{mac}}{{loc}}ttl").innerHTML;
              </script>
          {% endfor %}
       </tr>
