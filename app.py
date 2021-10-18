@@ -21,7 +21,7 @@ seen_mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
 locations = {'warehouse': 0, 'truck': 0, 'site': 0}
 beacons = {}
-MAX_TTL = 10
+MAX_TTL = 15
 # beacons -> {"<mac>": {"site": [<rssi>, <ttl>], "warehouse": [<rssi>, <ttl>], "truck": [<rssi>, <ttl>]}}
 # beacons -> {"<some mac address>": [<RSSI>, <location>, <ttl>]}
 # beacons -> {"<mac>": [location, ttl]}
@@ -164,7 +164,7 @@ def on_topic_msg(topic, client, userdata, msg):
     location = topic.lower()
     client.publish(debug_topic, f'{location}, :{mac.split(":")[-1]}')
 
-    beacons[mac] = [location, time.time()]
+    beacons[mac] = [location, int(time.time())]
 
     update_devices()
 
