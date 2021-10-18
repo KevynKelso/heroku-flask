@@ -16,23 +16,15 @@
                 for (var loc in data[mac]) {
                     var ttl = data[mac][loc][1];
                     var rssi = data[mac][loc][0];
-                    $(`#${mac}${loc}ttl`).text(ttl);
-                    $(`#${mac}${loc}rssi`).text(ttl);
-                    $(`#${mac}${loc}location`).text(loc);
+                    $(`#${mac}${loc}ttl`).text(`${ttl}`);
+                    $(`#${mac}${loc}rssi`).text(`${rssi}`);
+                    $(`#${mac}${loc}location`).text(`${loc}`);
                 }
             }
-
-            $('#result').text(data);
-            console.log(data);
           });
     };
           
     </script>
-    <span id="result">?</span>
-    <script>
-        document.getElementById("result").innerHTML;
-    </script>
-
     <img src="{{url_for('static', filename='banner.png')}}" class="banner" align="middle"/>
     <div class="{{ name }}-container">
     </div>
