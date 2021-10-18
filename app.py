@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import json
+import time
 
 from flask import Flask, jsonify, render_template
 
@@ -16,12 +17,14 @@ debug_topic = 'debug'
 
 serial_numbers = '255043926169824 59910660233440 104608418437344 10643107158240 110032962132192 126796219488480 146084900837600 156135141087456 16321053923552 163612645595360 205673293879520 216187357042912 220254691072224 251869962115296 252239312525536 257779820337376 259283058890976 260099102677216 268160756291808 270394139285728 277077125175520 279203100432608 29811562977504 33664115087584 40819547379936 41291993782496 43280563640544 44388681980128 50556238239968 50813936277728 53064499140832 6000247511264 60043804219616 63106132678880 70523557976288 97324137126112'.split()
 mac_addresses = []
+seen_mac_addresses = []
 # {"DeviceName":"N/A","DeviceMAC":"E0:18:9F:09:7D:36","DeviceRSSI":-50}
 locations = {'warehouse': 0, 'truck': 0, 'site': 0}
 beacons = {}
 MAX_TTL = 10
 # beacons -> {"<mac>": {"site": [<rssi>, <ttl>], "warehouse": [<rssi>, <ttl>], "truck": [<rssi>, <ttl>]}}
 # beacons -> {"<some mac address>": [<RSSI>, <location>, <ttl>]}
+# beacons -> {"<mac>": [location, ttl]}
 
 
 def sn_to_bytes(sn: int) -> str:
@@ -95,24 +98,39 @@ def reset_locations(locations):
 
 def update_devices():
     reset_locations(locations)
+    current_time = time.time()
 
     for mac in mac_addresses:
-        beacon_info = beacons[mac]
+        ttl = beacons[mac][1]
 
-        max_rssi = -999
-        max_loc = ''
-        for loc in beacon_info.keys():
-            rssi = beacon_info[loc][0]
-            if rssi > max_rssi:
-                max_rssi = rssi
-                max_loc = loc
+        if abs(current_time - ttl) > MAX_TTL:
+            beacons[mac][0] = 'unknown'
+            beacons[mac][1] = current_time
+            continue
 
-        if max_rssi != -999 and max_loc != '':
-            locations[max_loc] += 1
+        locations[beacons[mac][0]] += 1
 
-        # decrement ttl's
-        beacon_info = expire_ttls(beacon_info)
-        beacons[mac] = beacon_info
+
+# def update_devices():
+    # reset_locations(locations)
+
+    # for mac in mac_addresses:
+        # beacon_info = beacons[mac]
+
+        # max_rssi = -999
+        # max_loc = ''
+        # for loc in beacon_info.keys():
+        # rssi = beacon_info[loc][0]
+        # if rssi > max_rssi:
+        # max_rssi = rssi
+        # max_loc = loc
+
+        # if max_rssi != -999 and max_loc != '':
+        # locations[max_loc] += 1
+
+        # # decrement ttl's
+        # beacon_info = expire_ttls(beacon_info)
+        # beacons[mac] = beacon_info
 
 
 def on_message(client, userdata, msg):
@@ -131,15 +149,35 @@ def on_topic_msg(topic, client, userdata, msg):
         return
 
     mac = data['DeviceMAC'].lower()
-    rssi = int(data['DeviceRSSI'])
+    # rssi = int(data['DeviceRSSI'])
     location = topic.lower()
-    client.publish(debug_topic, f'{location},{mac.split(":")[-1]},{rssi}')
+    client.publish(debug_topic, f'{location}, :{mac.split(":")[-1]}')
 
-    beacon_info = beacons[mac]
-    beacon_info[location] = [rssi, MAX_TTL]
-    beacons[mac] = beacon_info
+    beacons[mac] = [location, time.time()]
 
     update_devices()
+
+# def on_topic_msg(topic, client, userdata, msg):
+    # data = json.loads(msg.payload.decode())
+
+    # valid_msg = validate_data(data)
+    # if valid_msg:
+    # if 'unrecognized' in valid_msg:
+    # return
+
+    # client.publish(debug_topic, f'{topic}: invalid data, {valid_msg}')
+    # return
+
+    # mac = data['DeviceMAC'].lower()
+    # rssi = int(data['DeviceRSSI'])
+    # location = topic.lower()
+    # client.publish(debug_topic, f'{location},{mac.split(":")[-1]},{rssi}')
+
+    # beacon_info = beacons[mac]
+    # beacon_info[location] = [rssi, MAX_TTL]
+    # beacons[mac] = beacon_info
+
+    # update_devices()
 
 
 def on_warehouse_msg(client, userdata, msg):

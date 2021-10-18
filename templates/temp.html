@@ -42,8 +42,11 @@
 
       <tr>
          <th> {{ mac }} </th>
-         <td>location: {{ beacon_info[0] }}</td>
-         <td>ttl: {{ beacon_info[1] }}</td>
+         {% for loc, rssi_ttl in beacon_info.items() %}
+         <td id="{{ mac }}{{ loc }}location">{{ loc }}</td>
+         <td id="{{ mac }}{{ loc }}rssi">{{rssi_ttl[0]}}</td>
+         <td id="{{ mac }}{{ loc }}ttl">{{rssi_ttl[1]}}</td>
+         {% endfor %}
       </tr>
 
       {% endfor %}
