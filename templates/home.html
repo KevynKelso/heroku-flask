@@ -6,7 +6,7 @@
       var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     </script>
     <script type="text/javascript">
-    var intervalID = setInterval(update_values,10000);
+    var intervalID = setInterval(update_values,3000);
 
     function update_values() {
         $.getJSON($SCRIPT_ROOT + '/_stuff',
@@ -14,13 +14,11 @@
           function(data) {
             for (var i = 0; i < data.length; i++) {
                 var beacon = data[i];
-                var mac = Object.keys(beacon)[0];
-                var rssi = beacon[mac][0];
-                console.log(rssi);
             }
 
             $('#result').text(data);
-            console.log(Object.keys(data[0])[0]);
+            console.log(data[0][0]);
+            console.log(data[0]);
           });
           
     };
