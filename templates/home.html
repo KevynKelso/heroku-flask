@@ -40,9 +40,9 @@
 
       <tr>
          <th> {{ key }} </th>
-         <td> RSSI: {{ value[0] }} dB</td>
-         <td> location: {{ value[1] }} </td>
-         <td> TTL: {{ value[2] }} </td>
+         <td id="{{ key }}rssi"> RSSI: {{ value[0] }} dB</td>
+         <td id="{{ key }}location"> location: {{ value[1] }} </td>
+         <td id="{{ key }}ttl"> TTL: {{ value[2] }} </td>
       </tr>
 
       {% endfor %}
