@@ -14,10 +14,13 @@
           function(data) {
             for (var i = 0; i < data.length; i++) {
                 var beacon = data[i];
-                console.log(Object.keys(beacon)[0]);
+                var mac = Object.keys(beacon)[0];
+                var rssi = beacon[mac][0];
+                console.log(rssi);
             }
 
             $('#result').text(data);
+            console.log(Object.keys(data[0])[0]);
           });
           
     };
