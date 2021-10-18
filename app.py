@@ -97,6 +97,7 @@ def update_devices():
 
         # decrement ttl's
         beacon_info = expire_ttls(beacon_info)
+        beacons[mac] = beacon_info
 
         max_rssi = -999
         max_loc = ''
