@@ -1,6 +1,5 @@
 import paho.mqtt.client as mqtt
 import json
-import time
 
 from flask import Flask, jsonify, render_template
 
@@ -87,17 +86,18 @@ def expire_ttls(beacon_info):
     return beacon_info
 
 
+def reset_locations(locations):
+    for loc in locations.keys():
+        locations[loc] = 0
+
+    return locations
+
+
 def update_devices():
-    locations['warehouse'] = 0
-    locations['truck'] = 0
-    locations['site'] = 0
+    reset_locations(locations)
 
     for mac in mac_addresses:
         beacon_info = beacons[mac]
-
-        # decrement ttl's
-        beacon_info = expire_ttls(beacon_info)
-        beacons[mac] = beacon_info
 
         max_rssi = -999
         max_loc = ''
@@ -109,6 +109,10 @@ def update_devices():
 
         if max_rssi != -999 and max_loc != '':
             locations[max_loc] += 1
+
+        # decrement ttl's
+        beacon_info = expire_ttls(beacon_info)
+        beacons[mac] = beacon_info
 
 
 def on_message(client, userdata, msg):
@@ -122,6 +126,7 @@ def on_topic_msg(topic, client, userdata, msg):
     if valid_msg:
         if 'unrecognized' in valid_msg:
             return
+
         client.publish(debug_topic, f'{topic}: invalid data, {valid_msg}')
         return
 
@@ -135,7 +140,6 @@ def on_topic_msg(topic, client, userdata, msg):
     beacons[mac] = beacon_info
 
     update_devices()
-    time.sleep(DELAY)
 
 
 def on_warehouse_msg(client, userdata, msg):

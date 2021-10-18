@@ -13,12 +13,9 @@
 
           function(data) {
             for (var mac in data) {
-                var rssi = data[mac][0];
-                var loc = data[mac][1];
-                var ttl = data[mac][2];
-                $(`#${mac}rssi`).text(rssi);
-                $(`#${mac}location`).text(loc);
-                $(`#${mac}ttl`).text(ttl);
+                for (var loc in data[mac]) {
+                    console.log(loc);
+                }
             }
 
             $('#result').text(data);
@@ -50,8 +47,8 @@
       <tr>
          <th> {{ mac }} </th>
          {% for loc, rssi_ttl in beacon_info.items() %}
-             <td id="{{ mac }}location"> location: {{ loc }} </td>
-             <td id="{{ mac }}rssi"> RSSI: {{ rssi_ttl[0] }} dB</td>
+             <td id="{{ mac }}location">{{ loc }}</td>
+             <td id="{{ mac }}rssi">{{ rssi_ttl[0] }} dB</td>
              <td id="{{ mac }}ttl"> TTL: {{ rssi_ttl[1] }} </td>
          {% endfor %}
       </tr>
