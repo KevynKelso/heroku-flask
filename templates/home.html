@@ -45,13 +45,15 @@
     <br>
     <h3>Beacon Info</h3>
     <table border = 1>
-      {% for key, value in beacons.items() %}
+      {% for mac, beacon_info in beacons.items() %}
 
       <tr>
-         <th> {{ key }} </th>
-         <td id="{{ key }}rssi"> RSSI: {{ value[0] }} dB</td>
-         <td id="{{ key }}location"> location: {{ value[1] }} </td>
-         <td id="{{ key }}ttl"> TTL: {{ value[2] }} </td>
+         <th> {{ mac }} </th>
+         {% for loc, rssi_ttl in beacon_info.items() %}
+             <td id="{{ mac }}location"> location: {{ loc }} </td>
+             <td id="{{ mac }}rssi"> RSSI: {{ rssi_ttl[0] }} dB</td>
+             <td id="{{ mac }}ttl"> TTL: {{ rssi_ttl[1] }} </td>
+         {% endfor %}
       </tr>
 
       {% endfor %}

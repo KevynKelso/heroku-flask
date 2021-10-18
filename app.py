@@ -2,8 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 
-from flask import Flask, jsonify, render_template, request
-from flask import render_template
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -22,6 +21,7 @@ mac_addresses = []
 locations = {'warehouse': 0, 'truck': 0, 'site': 0}
 beacons = {}
 MAX_TTL = 10
+# beacons -> {"<mac>": {"site": [<rssi>, <ttl>], "warehouse": [<rssi>, <ttl>], "truck": [<rssi>, <ttl>]}}
 # beacons -> {"<some mac address>": [<RSSI>, <location>, <ttl>]}
 
 
@@ -41,7 +41,9 @@ def init_beacons():
             mac_addresses.append(mac)
 
     for mac in mac_addresses:
-        beacons[mac] = [-999, "unknown", 0]
+        beacons[mac] = {"site": [-999, 0],
+                        "warehouse": [-999, 0],
+                        "truck": [-999, 0]}
 
 
 def on_connect(client, userdata, flags, rc):
@@ -71,28 +73,41 @@ def validate_data(data):
     return None
 
 
+def expire_ttls(beacon_info):
+    for location in beacon_info.keys():
+        beacon_info[location][1] -= 1
+
+        loc_info = beacon_info[location]
+        ttl = loc_info[1]
+        if ttl <= 0:
+            loc_info[0] = -999
+            loc_info[1] = 0
+            beacon_info[location] = loc_info
+
+    return beacon_info
+
+
 def update_devices():
     locations['warehouse'] = 0
     locations['truck'] = 0
     locations['site'] = 0
 
     for mac in mac_addresses:
-        rssi = beacons[mac][0]
-        location = beacons[mac][1]
-        ttl = beacons[mac][2]
-        # decrement ttl
-        beacons[mac][2] -= 1
+        beacon_info = beacons[mac]
 
-        if ttl <= 0:
-            beacons[mac][0] = -999
-            beacons[mac][1] = 'unknown'
-            beacons[mac][2] = 0
-            continue
+        # decrement ttl's
+        beacon_info = expire_ttls(beacon_info)
 
-        if rssi == -999 or location == 'unknown':
-            continue
+        max_rssi = -999
+        max_loc = ''
+        for loc in beacon_info.keys():
+            rssi = beacon_info[loc][0]
+            if rssi > max_rssi:
+                max_rssi = rssi
+                max_loc = loc
 
-        locations[location] += 1
+        if max_rssi != -999 and max_loc != '':
+            locations[max_loc] += 1
 
 
 def on_message(client, userdata, msg):
@@ -112,27 +127,11 @@ def on_topic_msg(topic, client, userdata, msg):
     mac = data['DeviceMAC'].lower()
     rssi = int(data['DeviceRSSI'])
     location = topic.lower()
+    client.publish(debug_topic, f'{location},{mac.split(":")[-1]},{rssi}')
 
-    last_rssi = beacons[mac][0]
-    last_location = beacons[mac][1]
-    ttl = beacons[mac][2]
-
-    if rssi > last_rssi:
-        ttl = MAX_TTL
-
-    if rssi > last_rssi and last_location != location:
-        beacons[mac] = [rssi, location, ttl]
-        client.publish(debug_topic, f'moved to {location}')
-        update_devices()
-        time.sleep(DELAY)
-        return
-
-    if last_location == location:
-        beacons[mac] = [rssi, last_location, ttl]
-        client.publish(debug_topic, f'{last_location}, {last_rssi} -> {rssi}')
-        update_devices()
-        time.sleep(DELAY)
-        return
+    beacon_info = beacons[mac]
+    beacon_info[location] = [rssi, MAX_TTL]
+    beacons[mac] = beacon_info
 
     update_devices()
     time.sleep(DELAY)
