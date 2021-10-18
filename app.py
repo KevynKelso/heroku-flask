@@ -136,7 +136,7 @@ def on_site_msg(client, userdata, msg):
 
 @app.route('/_stuff', methods = ['GET'])
 def stuff():
-    return jsonify(result=time.time())
+    return jsonify(beacons)
 
 @app.route("/")
 def home():

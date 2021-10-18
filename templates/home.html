@@ -12,15 +12,18 @@
         $.getJSON($SCRIPT_ROOT + '/_stuff',
 
           function(data) {
-            $('#result').text(data.result);
+            for (var i = 0; i < data.length; i++) {
+                var beacon = data[i];
+                console.log(beacon);
+            }
+
             console.log(data);
           });
           
     };
     </script>
-    <span id="result">?</span>
     <script>
-        document.getElementById("result").innerHTML;
+        {% comment %}document.getElementById("result").innerHTML;{% endcomment %}
     </script>
 
     <img src="{{url_for('static', filename='banner.png')}}" class="banner" align="middle"/>
