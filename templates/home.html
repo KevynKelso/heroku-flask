@@ -17,13 +17,15 @@
                 console.log(beacon);
             }
 
+            $('#result').text(data);
             console.log(data);
           });
           
     };
     </script>
+    <span id="result">?</span>
     <script>
-        {% comment %}document.getElementById("result").innerHTML;{% endcomment %}
+        document.getElementById("result").innerHTML;
     </script>
 
     <img src="{{url_for('static', filename='banner.png')}}" class="banner" align="middle"/>
