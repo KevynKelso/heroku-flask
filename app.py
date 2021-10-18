@@ -111,10 +111,12 @@ def update_devices():
 
     for mac in mac_addresses:
         ttl = beacons[mac][1]
+        if ttl == 0:
+            continue
 
         if abs(current_time - ttl) > MAX_TTL:
             beacons[mac][0] = 'unknown'
-            beacons[mac][1] = current_time
+            beacons[mac][1] = 0
             continue
 
         locations[beacons[mac][0]] += 1
