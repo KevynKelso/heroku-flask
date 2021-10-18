@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 
-from flask import Flask
+from flask import Flask, jsonify, render_template, request
 from flask import render_template
 
 app = Flask(__name__)
@@ -111,6 +111,7 @@ def on_topic_msg(topic, client, userdata, msg):
     last_rssi = beacons[mac][0]
 
     if last_rssi > rssi:
+        beacons[mac] = [rssi, topic.lower(), MAX_TTL] # not sure if need
         client.publish(debug_topic, f'remain at {beacons[mac][1]}')
         return
 
@@ -132,6 +133,10 @@ def on_truck_msg(client, userdata, msg):
 def on_site_msg(client, userdata, msg):
     on_topic_msg('Site', client, userdata, msg)
 
+
+@app.route('/_stuff', methods = ['GET'])
+def stuff():
+    return jsonify(result=time.time())
 
 @app.route("/")
 def home():

@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 {% block title %}{{ super() }}Home{% endblock %}
 {% block content %}
+    <script type="text/javascript">
+    var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    var intervalID = setInterval(update_values,1000);
+
+    function update_values() {
+        $.getJSON($SCRIPT_ROOT + '/_stuff',
+
+          function(data) {
+            $('#result').text(data.result);
+            console.log(data);
+          });
+          
+    };
+    </script>
+    <span id="result">?</span>
+    <script>
+        document.getElementById("result").innerHTML;
+    </script>
+
     <img src="{{url_for('static', filename='banner.png')}}" class="banner" align="middle"/>
     <div class="{{ name }}-container">
     </div>
