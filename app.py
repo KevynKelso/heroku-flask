@@ -36,6 +36,17 @@ def sn_to_bytes(sn: int) -> str:
     return returnValue
 
 
+# def init_beacons():
+    # for sn in serial_numbers:
+        # mac = sn_to_bytes(int(sn))
+        # if mac not in mac_addresses:
+            # mac_addresses.append(mac)
+
+    # for mac in mac_addresses:
+        # beacons[mac] = {"site": [-999, 0],
+                        # "warehouse": [-999, 0],
+                        # "truck": [-999, 0]}
+
 def init_beacons():
     for sn in serial_numbers:
         mac = sn_to_bytes(int(sn))
@@ -43,9 +54,7 @@ def init_beacons():
             mac_addresses.append(mac)
 
     for mac in mac_addresses:
-        beacons[mac] = {"site": [-999, 0],
-                        "warehouse": [-999, 0],
-                        "truck": [-999, 0]}
+        beacons[mac] = ['unknown', 0]
 
 
 def on_connect(client, userdata, flags, rc):
